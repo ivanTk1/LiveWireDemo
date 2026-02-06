@@ -1,110 +1,85 @@
-import { useState } from "react";
+import { useMemo } from 'react'
 
-// Mock transcript spans (normally comes from CW-2 transcript service)
-const transcriptSpans = {
-  price: {
-    ids: ["seg_12"],
-    text: "This seems expensive for what we get",
-  },
-  timing: {
-    ids: ["seg_18"],
-    text: "The timeline might be too slow for us",
-  },
-  trust: {
-    ids: ["seg_25"],
-    text: "How do we know this is reliable?",
-  },
-  competitor: {
-    ids: ["seg_31"],
-    text: "We are also evaluating another vendor",
-  },
-  "think about it": {
-    ids: ["seg_40"],
-    text: "Let me think about it and get back to you",
-  },
-};
+const OBJECTIONS = [
+  { key: 'price', keyword: 'expensive' },
+  { key: 'price', keyword: 'too costly' },
+  { key: 'price', keyword: 'out of budget' },
+  { key: 'price', keyword: 'cannot afford' },
+  { key: 'price', keyword: 'pricey' },
+  { key: 'price', keyword: 'overpriced' },
+  { key: 'timing', keyword: 'later' },
+  { key: 'timing', keyword: 'not right now' },
+  { key: 'timing', keyword: 'too soon' },
+  { key: 'timing', keyword: 'wait until next quarter' },
+  { key: 'timing', keyword: 'maybe in the future' },
+  { key: 'timing', keyword: 'not a good time' },
+  { key: 'authority', keyword: 'need approval' },
+  { key: 'authority', keyword: 'need manager approval' },
+  { key: 'authority', keyword: 'have to run it by my team' },
+  { key: 'authority', keyword: 'need to consult' },
+  { key: 'authority', keyword: 'not my decision' },
+  { key: 'competition', keyword: 'we already use someone else' },
+  { key: 'competition', keyword: 'loyal to current provider' },
+  { key: 'competition', keyword: 'switching is hard' },
+  { key: 'trust', keyword: 'not sure about your company' },
+  { key: 'trust', keyword: 'never heard of you' },
+  { key: 'trust', keyword: 'not convinced' },
+  { key: 'features', keyword: 'doesn’t have what we need' },
+  { key: 'features', keyword: 'missing features' },
+  { key: 'features', keyword: 'not enough functionality' },
+  { key: 'urgency', keyword: 'no rush' },
+  { key: 'urgency', keyword: 'we are fine for now' },
+  { key: 'urgency', keyword: 'not a priority' },
+  { key: 'fit', keyword: 'not a good fit' },
+  { key: 'fit', keyword: 'doesn’t meet our needs' },
+  { key: 'fit', keyword: 'not relevant to us' },
+  { key: 'process', keyword: 'too complicated' },
+  { key: 'process', keyword: 'too much work' },
+  { key: 'process', keyword: 'hard to implement' },
+  { key: 'budget', keyword: 'budget is frozen' },
+  { key: 'budget', keyword: 'no budget for this' },
+  { key: 'budget', keyword: 'budget cuts' },
+  { key: 'priority', keyword: 'other projects first' },
+  { key: 'priority', keyword: 'higher priorities' },
+  { key: 'risk', keyword: 'too risky' },
+  { key: 'risk', keyword: 'concerns about ROI' },
+  { key: 'risk', keyword: 'uncertain outcomes' },
+  { key: 'experience', keyword: 'had bad experience before' },
+  { key: 'experience', keyword: 'didn’t work last time' },
+  { key: 'knowledge', keyword: 'don’t know enough' },
+  { key: 'knowledge', keyword: 'need more info' },
+  { key: 'other', keyword: 'just thinking' },
+  { key: 'other', keyword: 'maybe later' },
+  { key: 'other', keyword: 'not interested' }
+];
 
-// Hardcoded objection -> card events mapping with evidence
-const objectionMap = {
-  price: [
-    {
-      cardId: "price_objection",
-      rationale: "User expresses concern about cost.",
-    },
-  ],
-  timing: [
-    {
-      cardId: "timing_objection",
-      rationale: "User indicates timeline constraints.",
-    },
-  ],
-  trust: [
-    {
-      cardId: "trust_objection",
-      rationale: "User questions reliability or credibility.",
-    },
-  ],
-  competitor: [
-    {
-      cardId: "competitor_objection",
-      rationale: "User mentions evaluating competitors.",
-    },
-  ],
-  "think about it": [
-    {
-      cardId: "stall_objection",
-      rationale: "User delays decision without commitment.",
-    },
-  ],
-};
+export default function ObjectionCards({ transcript, earlyWarning }) {
+  const activeCards = useMemo(() => {
+    if (!transcript) return []
 
-export default function ObjectionCards() {
-  const [objection, setObjection] = useState("");
-  const [cards, setCards] = useState([]);
+    const lower = transcript.toLowerCase()
 
-  const handleInput = (e) => {
-    const value = e.target.value.toLowerCase();
-    setObjection(value);
-
-    if (objectionMap[value]) {
-      const evidence = transcriptSpans[value];
-      const enrichedCards = objectionMap[value].map((card) => ({
-        ...card,
-        evidenceSpans: evidence.ids,
-        evidenceText: evidence.text,
-      }));
-      setCards(enrichedCards);
-    } else {
-      setCards([]);
-    }
-  };
+    return OBJECTIONS.filter(o => lower.includes(o.keyword))
+  }, [transcript])
 
   return (
-    <div style={{ padding: "1rem", fontFamily: "sans-serif" }}>
-      <h2>Objection → Cards Mock Generator</h2>
-      <input
-        type="text"
-        value={objection}
-        onChange={handleInput}
-        placeholder="Type an objection (e.g. price)"
-        style={{ padding: "0.5rem", width: "300px", marginBottom: "1rem" }}
-      />
-      <div>
-        {cards.length > 0 ? (
-          <ul>
-            {cards.map((card, idx) => (
-              <li key={idx} style={{ margin: "0.75rem 0" }}>
-                <strong>{card.cardId}</strong>
-                <div>Rationale: {card.rationale}</div>
-                <div>Evidence spans: {card.evidenceSpans.join(", ")}</div>
-                <div>Evidence text: “{card.evidenceText}”</div>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>No cards for this objection</p>
-        )}
-      </div>
+    <div className="cards">
+      {earlyWarning && (
+        <div className="warning">
+          ⚠️ Possible objection forming…
+        </div>
+      )}
+
+      {activeCards.map(card => (
+        <div key={card.key} className="card">
+          <h3>{card.key}</h3>
+          <p>Detected from finalized speech</p>
+        </div>
+      ))}
+
+      {activeCards.length === 0 && !earlyWarning && (
+        <p>No objections detected</p>
+      )}
     </div>
-  );
+  )
 }
