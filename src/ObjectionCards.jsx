@@ -1,26 +1,60 @@
 import { useState } from "react";
 
-// Hardcoded objection -> cards mapping
+// Mock transcript spans (normally comes from CW-2 transcript service)
+const transcriptSpans = {
+  price: {
+    ids: ["seg_12"],
+    text: "This seems expensive for what we get",
+  },
+  timing: {
+    ids: ["seg_18"],
+    text: "The timeline might be too slow for us",
+  },
+  trust: {
+    ids: ["seg_25"],
+    text: "How do we know this is reliable?",
+  },
+  competitor: {
+    ids: ["seg_31"],
+    text: "We are also evaluating another vendor",
+  },
+  "think about it": {
+    ids: ["seg_40"],
+    text: "Let me think about it and get back to you",
+  },
+};
+
+// Hardcoded objection -> card events mapping with evidence
 const objectionMap = {
   price: [
-    "Totally fair — what would make this feel like a no-brainer?",
-    "Let's explore ROI to justify cost.",
+    {
+      cardId: "price_objection",
+      rationale: "User expresses concern about cost.",
+    },
   ],
   timing: [
-    "I understand, would a faster delivery help?",
-    "We can adjust the schedule if needed.",
+    {
+      cardId: "timing_objection",
+      rationale: "User indicates timeline constraints.",
+    },
   ],
   trust: [
-    "Here’s our client success stories.",
-    "We are ISO-certified and fully compliant.",
+    {
+      cardId: "trust_objection",
+      rationale: "User questions reliability or credibility.",
+    },
   ],
   competitor: [
-    "How does our solution compare to X?",
-    "Here’s what differentiates us clearly.",
+    {
+      cardId: "competitor_objection",
+      rationale: "User mentions evaluating competitors.",
+    },
   ],
   "think about it": [
-    "Take your time — when should we follow up?",
-    "Would more info help with your decision?",
+    {
+      cardId: "stall_objection",
+      rationale: "User delays decision without commitment.",
+    },
   ],
 };
 
@@ -33,7 +67,13 @@ export default function ObjectionCards() {
     setObjection(value);
 
     if (objectionMap[value]) {
-      setCards(objectionMap[value]);
+      const evidence = transcriptSpans[value];
+      const enrichedCards = objectionMap[value].map((card) => ({
+        ...card,
+        evidenceSpans: evidence.ids,
+        evidenceText: evidence.text,
+      }));
+      setCards(enrichedCards);
     } else {
       setCards([]);
     }
@@ -53,8 +93,11 @@ export default function ObjectionCards() {
         {cards.length > 0 ? (
           <ul>
             {cards.map((card, idx) => (
-              <li key={idx} style={{ margin: "0.5rem 0" }}>
-                {card}
+              <li key={idx} style={{ margin: "0.75rem 0" }}>
+                <strong>{card.cardId}</strong>
+                <div>Rationale: {card.rationale}</div>
+                <div>Evidence spans: {card.evidenceSpans.join(", ")}</div>
+                <div>Evidence text: “{card.evidenceText}”</div>
               </li>
             ))}
           </ul>
